@@ -1,11 +1,16 @@
 import { useState, useContext } from "react";
 import GithubContext from "../context/github/GithubContext";
+import AlertContext from "../context/alert/AlertContext";
+import Alert from "../layout/Alert";
+import Spinner from "../layout/Spinner";
 import { FaTrashAlt, FaSistrix } from "react-icons/fa";
 
 function UserSearch() {
     const [text, setText] = useState("");
 
-    const { users, searchUsers, clearUsers } = useContext(GithubContext);
+    const { users, loading, searchUsers, clearUsers } =
+        useContext(GithubContext);
+    const { alert, setAlert } = useContext(AlertContext);
 
     const handleChange = (e) => {
         setText(e.target.value);
@@ -14,7 +19,7 @@ function UserSearch() {
     const handleSubmit = (e) => {
         e.preventDefault();
         if (text === "") {
-            alert("Please enter something");
+            setAlert("Please enter something", "searchError");
         } else {
             searchUsers(text);
         }
@@ -58,6 +63,9 @@ function UserSearch() {
                     </div>
                 </div>
             </form>
+            {alert.type === "searchError" && <Alert />}
+            {alert.type === "findError" && <Alert />}
+            {loading && <Spinner />}
         </div>
     );
 }
