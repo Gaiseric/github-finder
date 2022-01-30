@@ -1,3 +1,6 @@
+import { FaHome } from "react-icons/fa";
+import { Link } from "react-router-dom";
+
 function About() {
     return (
         <div className="text-center mx-auto">
@@ -40,6 +43,10 @@ function About() {
                     &nbsp;Hassib Moddasser
                 </a>
             </p>
+            <Link to="/" className="btn btn-primary mt-4">
+                <FaHome className="mr-2" />
+                Back To Home
+            </Link>
         </div>
     );
 }
