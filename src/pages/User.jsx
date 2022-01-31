@@ -1,32 +1,27 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useContext } from "react";
 import { useParams, Link } from "react-router-dom";
 import GithubContext from "../components/context/github/GithubContext";
 import Spinner from "../components/layout/Spinner";
 import ReposList from "../components/repos/ReposList";
 import { FaCodepen, FaStore, FaUserFriends, FaUsers } from "react-icons/fa";
+import useGithubActions from "../components/context/github/GithubActions";
 
 function User() {
-    const {
-        user,
-        repos,
-        loading,
-        getUser,
-        getUserRepos,
-        clearUser,
-        clearRepos,
-    } = useContext(GithubContext);
+    const { user, repos, loading } = useContext(GithubContext);
 
     const params = useParams();
+
+    const { getUser, getUserRepos, clearUser, clearRepos } = useGithubActions();
 
     useEffect(() => {
         getUser(params.login);
         getUserRepos(params.login);
+
         return () => {
             clearUser();
             clearRepos();
         };
-    }, []);
+    }, [getUser, getUserRepos, clearUser, clearRepos, params.login]);
 
     if (loading) {
         return <Spinner />;

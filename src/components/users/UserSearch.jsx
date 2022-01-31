@@ -4,14 +4,16 @@ import AlertContext from "../context/alert/AlertContext";
 import Alert from "../layout/Alert";
 import Spinner from "../layout/Spinner";
 import { FaTrashAlt, FaSistrix } from "react-icons/fa";
+import useGithubActions from "../context/github/GithubActions";
 
 function UserSearch() {
     const [text, setText] = useState("");
 
-    const { users, loading, searchUsers, clearUsers } =
-        useContext(GithubContext);
+    const { users, loading } = useContext(GithubContext);
 
     const { alert, setAlert } = useContext(AlertContext);
+
+    const { searchUsers, clearUsers } = useGithubActions();
 
     const handleChange = (e) => {
         setText(e.target.value);
@@ -23,18 +25,18 @@ function UserSearch() {
         }
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         if (text === "") {
             setAlert("Please enter something", "searchError");
         } else {
             searchUsers(text);
+            setText("");
         }
     };
 
     const handleClear = () => {
         clearUsers();
-        setText("");
     };
 
     return (
