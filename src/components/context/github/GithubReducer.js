@@ -28,6 +28,11 @@ const githubReducer = (state, action) => {
                 ...state,
                 user: [],
             };
+        case "CLEAR_REPOS":
+            return {
+                ...state,
+                repos: [],
+            };
         case "SET_LOADING":
             return {
                 ...state,

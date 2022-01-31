@@ -29,48 +29,59 @@ export const GithubProvider = ({ children }) => {
             q: text,
         });
 
-        const response = await fetch(`${GITHUB_URL}/search/users?${params}`, {
-            headers: {
-                Authorization: `token ${GITHUB_TOKEN}`,
-            },
-        });
+        try {
+            const response = await fetch(
+                `${GITHUB_URL}/search/users?${params}`,
+                {
+                    headers: {
+                        Authorization: `token ${GITHUB_TOKEN}`,
+                    },
+                }
+            );
 
-        if (response.status === 404) {
-            responseError();
-        } else {
-            const { items } = await response.json();
-
-            if (items.length === 0) {
-                dispatch({ type: "CLEAR_LOADING" });
-
-                setAlert("Nothing found", "findError");
+            if (response.status === 404) {
+                responseError();
             } else {
-                dispatch({
-                    type: "GET_USERS",
-                    payload: items,
-                });
+                const { items } = await response.json();
+
+                if (items.length === 0) {
+                    dispatch({ type: "CLEAR_LOADING" });
+
+                    setAlert("Nothing found", "findError");
+                } else {
+                    dispatch({
+                        type: "GET_USERS",
+                        payload: items,
+                    });
+                }
             }
+        } catch (error) {
+            fetchError(error.message);
         }
     };
 
     const getUser = async (login) => {
         dispatch({ type: "SET_LOADING" });
 
-        const response = await fetch(`${GITHUB_URL}/users/${login}`, {
-            headers: {
-                Authorization: `token ${GITHUB_TOKEN}`,
-            },
-        });
-
-        if (response.status === 404) {
-            responseError();
-        } else {
-            const data = await response.json();
-
-            dispatch({
-                type: "GET_USER",
-                payload: data,
+        try {
+            const response = await fetch(`${GITHUB_URL}/users/${login}`, {
+                headers: {
+                    Authorization: `token ${GITHUB_TOKEN}`,
+                },
             });
+
+            if (response.status === 404) {
+                responseError();
+            } else {
+                const data = await response.json();
+
+                dispatch({
+                    type: "GET_USER",
+                    payload: data,
+                });
+            }
+        } catch (error) {
+            fetchError(error.message);
         }
     };
 
@@ -84,24 +95,28 @@ export const GithubProvider = ({ children }) => {
             per_page: 10,
         });
 
-        const response = await fetch(
-            `${GITHUB_URL}/users/${login}/repos?${params}`,
-            {
-                headers: {
-                    Authorization: `token ${GITHUB_TOKEN}`,
-                },
+        try {
+            const response = await fetch(
+                `${GITHUB_URL}/users/${login}/repos?${params}`,
+                {
+                    headers: {
+                        Authorization: `token ${GITHUB_TOKEN}`,
+                    },
+                }
+            );
+
+            if (response.status === 404) {
+                responseError();
+            } else {
+                const data = await response.json();
+
+                dispatch({
+                    type: "GET_REPOS",
+                    payload: data,
+                });
             }
-        );
-
-        if (response.status === 404) {
-            responseError();
-        } else {
-            const data = await response.json();
-
-            dispatch({
-                type: "GET_REPOS",
-                payload: data,
-            });
+        } catch (error) {
+            fetchError(error.message);
         }
     };
 
@@ -109,9 +124,15 @@ export const GithubProvider = ({ children }) => {
 
     const clearUser = () => dispatch({ type: "CLEAR_USER" });
 
+    const clearRepos = () => dispatch({ type: "CLEAR_REPOS" });
+
+    const fetchError = (message) => {
+        dispatch({ type: "CLEAR_LOADING" });
+        setAlert(`${message}`, "findError");
+    };
+
     const responseError = () => {
         dispatch({ type: "CLEAR_LOADING" });
-
         errorNavigate("/notfound", { replace: true });
     };
 
@@ -127,6 +148,7 @@ export const GithubProvider = ({ children }) => {
                 clearUsers,
                 clearUser,
                 getUserRepos,
+                clearRepos,
             }}
         >
             {children}

@@ -7,15 +7,25 @@ import ReposList from "../components/repos/ReposList";
 import { FaCodepen, FaStore, FaUserFriends, FaUsers } from "react-icons/fa";
 
 function User() {
-    const { user, repos, loading, getUser, getUserRepos, clearUser } =
-        useContext(GithubContext);
+    const {
+        user,
+        repos,
+        loading,
+        getUser,
+        getUserRepos,
+        clearUser,
+        clearRepos,
+    } = useContext(GithubContext);
 
     const params = useParams();
 
     useEffect(() => {
         getUser(params.login);
         getUserRepos(params.login);
-        return () => clearUser();
+        return () => {
+            clearUser();
+            clearRepos();
+        };
     }, []);
 
     if (loading) {
@@ -105,7 +115,11 @@ function User() {
                                     </div>
                                     <div className="text-lg stat-value">
                                         <a
-                                            href={blog}
+                                            href={
+                                                blog.startsWith("https://")
+                                                    ? blog
+                                                    : `https://${blog}`
+                                            }
                                             target="_blank"
                                             rel="noreferrer"
                                         >

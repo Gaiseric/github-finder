@@ -10,10 +10,17 @@ function UserSearch() {
 
     const { users, loading, searchUsers, clearUsers } =
         useContext(GithubContext);
+
     const { alert, setAlert } = useContext(AlertContext);
 
     const handleChange = (e) => {
         setText(e.target.value);
+    };
+
+    const handleEnterDown = (e) => {
+        if (e.code === "Enter") {
+            handleSubmit(e);
+        }
     };
 
     const handleSubmit = (e) => {
@@ -41,6 +48,7 @@ function UserSearch() {
                             placeholder="Search"
                             value={text}
                             onChange={handleChange}
+                            onKeyDown={handleEnterDown}
                         />
                         {users.length > 0 && (
                             <button
