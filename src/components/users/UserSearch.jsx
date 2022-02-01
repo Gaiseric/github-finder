@@ -11,7 +11,7 @@ function UserSearch() {
 
     const { users, loading } = useContext(GithubContext);
 
-    const { alert, setAlert } = useContext(AlertContext);
+    const { alert, dispatchAlert } = useContext(AlertContext);
 
     const { searchUsers, clearUsers } = useGithubActions();
 
@@ -28,7 +28,15 @@ function UserSearch() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (text === "") {
-            setAlert("Please enter something", "searchError");
+            dispatchAlert({
+                type: "SET_ALERT",
+                payload: {
+                    msg: "Please enter something",
+                    type: "usersSearchError",
+                },
+            });
+
+            setTimeout(() => dispatchAlert({ type: "REMOVE_ALERT" }), 3000);
         } else {
             searchUsers(text);
             setText("");
@@ -49,6 +57,7 @@ function UserSearch() {
                             className="w-full pr-40 bg-gray-200 input text-black block"
                             placeholder="Search"
                             value={text}
+                            title="Type to search"
                             onChange={handleChange}
                             onKeyDown={handleEnterDown}
                         />
@@ -73,8 +82,7 @@ function UserSearch() {
                     </div>
                 </div>
             </form>
-            {alert.type === "searchError" && <Alert />}
-            {alert.type === "findError" && <Alert />}
+            {alert.type === "usersSearchError" && <Alert />}
             {loading && <Spinner />}
         </div>
     );

@@ -11,17 +11,13 @@ function User() {
 
     const params = useParams();
 
-    const { getUser, getUserRepos, clearUser, clearRepos } = useGithubActions();
+    const { getUserAndRepos, clearUserAndRepos } = useGithubActions();
 
     useEffect(() => {
-        getUser(params.login);
-        getUserRepos(params.login);
+        getUserAndRepos(params.login);
 
-        return () => {
-            clearUser();
-            clearRepos();
-        };
-    }, [getUser, getUserRepos, clearUser, clearRepos, params.login]);
+        return () => clearUserAndRepos();
+    }, [getUserAndRepos, clearUserAndRepos, params.login]);
 
     if (loading) {
         return <Spinner />;

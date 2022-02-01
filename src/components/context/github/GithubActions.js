@@ -1,4 +1,5 @@
-import { useContext, useCallback } from "react";
+import axios from "axios";
+import { useContext, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import AlertContext from "../alert/AlertContext";
 import GithubContext from "./GithubContext";
@@ -7,94 +8,70 @@ function useGithubActions() {
     const GITHUB_URL = process.env.REACT_APP_GITHUB_URL;
     const GITHUB_TOKEN = process.env.REACT_APP_GITHUB_TOKEN;
 
-    const { setAlert } = useContext(AlertContext);
+    const { dispatchAlert } = useContext(AlertContext);
 
-    const { dispatch } = useContext(GithubContext);
+    const { dispatchGithub } = useContext(GithubContext);
 
     const errorNavigate = useNavigate();
 
-    const fetchError = useCallback(
-        (message) => {
-            dispatch({ type: "CLEAR_LOADING" });
-            setAlert(`${message}`, "findError");
-        },
-        [dispatch, setAlert]
+    const githubAxios = useMemo(
+        () =>
+            axios.create({
+                baseURL: GITHUB_URL,
+                headers: { Authorization: `token ${GITHUB_TOKEN}` },
+            }),
+        [GITHUB_TOKEN, GITHUB_URL]
     );
 
-    const responseError = useCallback(() => {
-        dispatch({ type: "CLEAR_LOADING" });
-        errorNavigate("/notfound", { replace: true });
-    }, [dispatch, errorNavigate]);
+    const requestError = useCallback(
+        (message) => {
+            dispatchGithub({ type: "CLEAR_LOADING" });
+
+            dispatchAlert({
+                type: "SET_ALERT",
+                payload: { msg: `${message}`, type: "requestError" },
+            });
+
+            errorNavigate("/notfound", { replace: true });
+        },
+        [dispatchGithub, dispatchAlert, errorNavigate]
+    );
 
     const searchUsers = async (text) => {
-        dispatch({ type: "SET_LOADING" });
+        dispatchGithub({ type: "SET_LOADING" });
 
         const params = new URLSearchParams({
             q: text,
         });
 
         try {
-            const response = await fetch(
-                `${GITHUB_URL}/search/users?${params}`,
-                {
-                    headers: {
-                        Authorization: `token ${GITHUB_TOKEN}`,
-                    },
-                }
-            );
+            const response = await githubAxios.get(`/search/users?${params}`);
 
-            if (response.status === 404) {
-                responseError();
+            if (response.data.items.length === 0) {
+                dispatchGithub({ type: "CLEAR_LOADING" });
+
+                dispatchAlert({
+                    type: "SET_ALERT",
+                    payload: { msg: "Nothing found", type: "usersSearchError" },
+                });
+
+                setTimeout(() => dispatchAlert({ type: "REMOVE_ALERT" }), 3000);
             } else {
-                const { items } = await response.json();
-
-                if (items.length === 0) {
-                    dispatch({ type: "CLEAR_LOADING" });
-
-                    setAlert("Nothing found", "findError");
-                } else {
-                    dispatch({
-                        type: "GET_USERS",
-                        payload: items,
-                    });
-                }
+                dispatchGithub({
+                    type: "SET_USERS",
+                    payload: response.data.items,
+                });
             }
         } catch (error) {
-            fetchError(error.message);
+            requestError(error.message);
         }
     };
 
-    const getUser = useCallback(
+    const clearUsers = () => dispatchGithub({ type: "CLEAR_USERS" });
+
+    const getUserAndRepos = useCallback(
         async (login) => {
-            dispatch({ type: "SET_LOADING" });
-
-            try {
-                const response = await fetch(`${GITHUB_URL}/users/${login}`, {
-                    headers: {
-                        Authorization: `token ${GITHUB_TOKEN}`,
-                    },
-                });
-
-                if (response.status === 404) {
-                    responseError();
-                } else {
-                    const data = await response.json();
-
-                    dispatch({
-                        type: "GET_USER",
-                        payload: data,
-                    });
-                }
-            } catch (error) {
-                fetchError(error.message);
-            }
-        },
-        [GITHUB_TOKEN, GITHUB_URL, dispatch, fetchError, responseError]
-    );
-
-    const getUserRepos = useCallback(
-        async (login) => {
-            dispatch({ type: "SET_LOADING" });
+            dispatchGithub({ type: "SET_LOADING" });
 
             const params = new URLSearchParams({
                 type: "public",
@@ -104,51 +81,35 @@ function useGithubActions() {
             });
 
             try {
-                const response = await fetch(
-                    `${GITHUB_URL}/users/${login}/repos?${params}`,
-                    {
-                        headers: {
-                            Authorization: `token ${GITHUB_TOKEN}`,
-                        },
-                    }
-                );
+                const [user, repos] = await Promise.all([
+                    githubAxios.get(`/users/${login}`),
+                    githubAxios.get(`/users/${login}/repos?${params}`),
+                ]);
 
-                if (response.status === 404) {
-                    responseError();
-                } else {
-                    const data = await response.json();
-
-                    dispatch({
-                        type: "GET_REPOS",
-                        payload: data,
-                    });
-                }
+                dispatchGithub({
+                    type: "SET_USER_AND_REPOS",
+                    payload: {
+                        user: user.data,
+                        repos: repos.data,
+                    },
+                });
             } catch (error) {
-                fetchError(error.message);
+                requestError(error.message);
             }
         },
-        [GITHUB_TOKEN, GITHUB_URL, dispatch, fetchError, responseError]
+        [dispatchGithub, githubAxios, requestError]
     );
 
-    const clearUsers = () => dispatch({ type: "CLEAR_USERS" });
-
-    const clearUser = useCallback(
-        () => dispatch({ type: "CLEAR_USER" }),
-        [dispatch]
-    );
-
-    const clearRepos = useCallback(
-        () => dispatch({ type: "CLEAR_REPOS" }),
-        [dispatch]
+    const clearUserAndRepos = useCallback(
+        () => dispatchGithub({ type: "CLEAR_USER_AND_REPOS" }),
+        [dispatchGithub]
     );
 
     return {
         searchUsers,
-        getUser,
-        getUserRepos,
         clearUsers,
-        clearUser,
-        clearRepos,
+        getUserAndRepos,
+        clearUserAndRepos,
     };
 }
 

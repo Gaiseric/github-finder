@@ -16,7 +16,7 @@ function About() {
                 Udemy course with some rework
             </p>
             <p className="text-lg text-gray-400">
-                Version <span className="text-white">1.0.0</span>
+                Version <span className="text-white">1.1</span>
             </p>
             <p className="text-lg text-gray-400">
                 Made by: <span className="text-white">Gaiseric</span>
@@ -33,7 +33,7 @@ function About() {
                 </a>
             </p>
             <p className="text-lg text-gray-400">
-                Layout By:
+                Layout by:
                 <a
                     className="text-white"
                     href="https://twitter.com/hassibmoddasser"
